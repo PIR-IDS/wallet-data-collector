@@ -3,13 +3,15 @@
 #include <ArduinoBLE.h>
 
 #define STRING_BUFFER_SIZE 6000
+#define DELAY_BETWEEN_TRANSMISSIONS 400  // seems to be close to the minimum delay required to get all the data
+#define NUMBER_OF_LINES_SEND 2000
 //a counter to limit the number of cycles where values are displayed
 int counter = 0;
 int id = 0;
 int dataIndex = 0;
 
 
-String data[16];  // ble payload can only contain 13 lines of data, so we need to send 15 payload to send the 200 lines
+String data[NUMBER_OF_LINES_SEND / 13 + (NUMBER_OF_LINES_SEND % 13 > 0 ? 1 : 0)];  // ble payload can only contain 13 lines of data, so we need to send 15 payload to send the NUMBER_OF_LINES_SEND lines
 BLEService userData("181C");
 BLEStringCharacteristic testSample("2A3D",
                                    BLERead | BLENotify,    // remote clients will be able to get notifications if this characteristic changes
@@ -63,8 +65,8 @@ void loop()
     while (central.connected()) {
         if (central.connected()) {
             // Check if the accelerometer is ready and if the loop has only
-            //   been run less than 200 times (=~3 seconds displayed)
-            if (IMU.accelerationAvailable() && counter < 200) {
+            //   been run less than NUMBER_OF_LINES_SEND times (=~3 seconds displayed)
+            if (IMU.accelerationAvailable() && counter < NUMBER_OF_LINES_SEND) {
                 // Read the accelerometer
                 IMU.readAcceleration(x, y, z);
                 // Scale up the values to better distinguish movements
@@ -80,14 +82,14 @@ void loop()
                     data[dataIndex] = data[dataIndex] + "\n";
                 }
 
-            // When the loop has run 200 times, reset the counter and delay
+            // When the loop has run NUMBER_OF_LINES_SEND times, reset the counter and delay
             //   3 seconds, then print empty lines and the new datapoint sequence
-            } else if (IMU.accelerationAvailable() && counter >= 200) {
+            } else if (IMU.accelerationAvailable() && counter >= NUMBER_OF_LINES_SEND) {
                 id++;
                 for (auto & i : data) {
                     testSample.writeValue(i);
                     i = "";
-                    delay(1000);
+                    delay(DELAY_BETWEEN_TRANSMISSIONS);
                     if (!central.connected()) {
                         break;
                     }
