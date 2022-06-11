@@ -42,7 +42,7 @@
       <ul>
         <li><a href="#execution">Execution</a></li>
         <li><a href="#generation">Generation</a></li>
-        <li><a href="#tests">How to collect the Data ?</a></li>
+        <li><a href="#tests">Tests</a></li>
         <li><a href="#documentation">Documentation</a></li>
       </ul>
     <li><a href="#tree-structure">Tree Structure</a></li>
@@ -127,8 +127,14 @@ You can also build the firmware in the default `debug` mode without uploading:
 
 Again, by adding the `-e release` option you will be in `release` mode.
 
-### How to collect the data ?
+### Tests
+  
+_TODO_
 
+### Documentation
+
+#### How to collect the data ?
+  
 To collect properly the data of the accelerometer without having to plug the card to a pc, we use the bluetooth connection by running the ble-reader on a pc to retrieve the accelerometer data. After uploading the code on the arduino, unplug it, start the battery and put the arduino in the wallet you want to test. Then, record and retrieve the data by running the ble-reader on a laptop.
   
 For the positive samples, edit the main.cpp file to send 500 lines on each samples.
@@ -136,10 +142,6 @@ For the positive samples, edit the main.cpp file to send 500 lines on each sampl
 For the negative samples, there are two options. First, we can record the data of the wallet utilisation without pay card utilisation. To do that, the method is similar as the one for the positive samples. We can also record the data of the wallet during non-wallet utilisation (walking, climbings stairs, ...). To do that, edit the main.cpp file to send 2000 lines on each samples.
   
 The data of the accelerometer s collected by the arduino between 2 transmissions. The moves done during transmission are not recorded.
-
-### Documentation
-
-_TODO_
 
 ***
 
