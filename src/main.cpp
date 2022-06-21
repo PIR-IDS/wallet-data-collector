@@ -4,12 +4,18 @@
 
 #define STRING_BUFFER_SIZE 6000
 #define DELAY_BETWEEN_TRANSMISSIONS 400  // seems to be close to the minimum delay required to get all the data
-#define NUMBER_OF_LINES_SEND 2000
+#define NUMBER_OF_LINES_SEND 256 // ne pas mettre un nombre congru a 1 modulo 13 (300 par exemple)   100 lignes ~1s de capture
+#define SAMPLE_RATE_TARGET 25 // the rate expected to run the model training
+
 //a counter to limit the number of cycles where values are displayed
+
 int counter = 0;
 int id = 0;
 int dataIndex = 0;
+int sample_skip_counter;
 
+float sample_rate_IMU = IMU.accelerationSampleRate(); // the arduino nano 33 BLE sample rate is supposed to be119Hz
+int sample_every_n = static_cast<int>(roundf(sample_rate_IMU / SAMPLE_RATE_TARGET));
 
 String data[NUMBER_OF_LINES_SEND / 13 + (NUMBER_OF_LINES_SEND % 13 > 0 ? 1 : 0)];  // ble payload can only contain 13 lines of data, so we need to send 15 payload to send the NUMBER_OF_LINES_SEND lines
 BLEService userData("181C");
@@ -61,20 +67,41 @@ void loop()
     if (central) {
         digitalWrite(LED_BUILTIN, HIGH);
     }
+    if (central.connected())
+    {
+        testSample.writeValue("\n");
+    }
 
     while (central.connected()) {
         if (central.connected()) {
             // Check if the accelerometer is ready and if the loop has only
             //   been run less than NUMBER_OF_LINES_SEND times (=~3 seconds displayed)
-            if (IMU.accelerationAvailable() && counter < NUMBER_OF_LINES_SEND) {
+            if (counter < NUMBER_OF_LINES_SEND) {
                 // Read the accelerometer
-                IMU.readAcceleration(x, y, z);
+                if (!IMU.accelerationAvailable()) {
+                    continue;
+                }
+                if (!IMU.readAcceleration(x, y, z)) {
+                    break;
+                }
                 // Scale up the values to better distinguish movements
                 xx = (int) (x * 1000);
                 yy = (int) (y * 1000);
                 zz = (int) (z * 1000);
 
+                // Skip the next values to record at the proper sample rate
+                sample_skip_counter = 0;
+                for (int index = 1; index < sample_every_n; index++) {
+                    if (!IMU.accelerationAvailable()) {
+                        continue;
+                    }
+                    if (!IMU.readAcceleration(x, y, z)) {
+                        break;
+                    }
+                }
+
                 data[dataIndex] = data[dataIndex] + String(xx) + "," + String(yy) + "," + String(zz);
+                //data[dataIndex] = data[dataIndex] + String(dataIndex) + "," + String(yy) + "," + String(zz);
 
                 if (counter != 0 && counter % 13 == 0) {
                     dataIndex++;
@@ -84,7 +111,7 @@ void loop()
 
             // When the loop has run NUMBER_OF_LINES_SEND times, reset the counter and delay
             //   3 seconds, then print empty lines and the new datapoint sequence
-            } else if (IMU.accelerationAvailable() && counter >= NUMBER_OF_LINES_SEND) {
+            } else {
                 id++;
                 for (auto & i : data) {
                     testSample.writeValue(i);
@@ -101,7 +128,6 @@ void loop()
             }
             // Increment the counter and delay .01 seconds
             counter++;
-            delay(10);
         }
 
         if (!central.connected()) {
