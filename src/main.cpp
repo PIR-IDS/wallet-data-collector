@@ -3,15 +3,19 @@
 #include <ArduinoBLE.h>
 
 #define STRING_BUFFER_SIZE 6000
-#define DELAY_BETWEEN_TRANSMISSIONS 400  // seems to be close to the minimum delay required to get all the data
-#define NUMBER_OF_LINES_SEND 2000
+#define DELAY_BETWEEN_TRANSMISSIONS 1000
+#define NUMBER_OF_LINES_SEND 256 // ne pas mettre un nombre congru a 1 modulo 13 (300 par exemple)   100 lignes ~1s de capture
+#define SAMPLE_RATE_TARGET 25 // the rate expected to run the model training
+
 //a counter to limit the number of cycles where values are displayed
+
 int counter = 0;
-int id = 0;
-int dataIndex = 0;
+int sample_skip_counter;
 
+float sample_rate_IMU = IMU.accelerationSampleRate(); // the arduino nano 33 BLE sample rate is supposed to be119Hz
+int sample_every_n = static_cast<int>(roundf(sample_rate_IMU / SAMPLE_RATE_TARGET));
 
-String data[NUMBER_OF_LINES_SEND / 13 + (NUMBER_OF_LINES_SEND % 13 > 0 ? 1 : 0)];  // ble payload can only contain 13 lines of data, so we need to send 15 payload to send the NUMBER_OF_LINES_SEND lines
+String data;  // ble payload can only contain 13 lines of data, so we need to send 15 payload to send the NUMBER_OF_LINES_SEND lines
 BLEService userData("181C");
 BLEStringCharacteristic testSample("2A3D",
                                    BLERead | BLENotify,    // remote clients will be able to get notifications if this characteristic changes
@@ -48,7 +52,7 @@ void setup()
     if (!IMU.begin()) {
     }
 
-    data[0] = "-,-,-\n";
+    data = String(counter%10) + "-,-,-\n";
 }
 
 void loop()
@@ -61,47 +65,62 @@ void loop()
     if (central) {
         digitalWrite(LED_BUILTIN, HIGH);
     }
+    if (central.connected())
+    {
+        testSample.writeValue("\n");
+    }
 
     while (central.connected()) {
         if (central.connected()) {
             // Check if the accelerometer is ready and if the loop has only
             //   been run less than NUMBER_OF_LINES_SEND times (=~3 seconds displayed)
-            if (IMU.accelerationAvailable() && counter < NUMBER_OF_LINES_SEND) {
+            if (counter < NUMBER_OF_LINES_SEND) {
                 // Read the accelerometer
-                IMU.readAcceleration(x, y, z);
+                while (!IMU.accelerationAvailable()) {}
+                if (!IMU.readAcceleration(x, y, z)) {
+                    break;
+                }
                 // Scale up the values to better distinguish movements
                 xx = (int) (x * 1000);
                 yy = (int) (y * 1000);
                 zz = (int) (z * 1000);
 
-                data[dataIndex] = data[dataIndex] + String(xx) + "," + String(yy) + "," + String(zz);
+                //data = data + String(xx) + "," + String(yy) + "," + String(zz);
+                data = data + String(counter) + "," + String(sample_every_n) + "," + String(zz);
 
-                if (counter != 0 && counter % 13 == 0) {
-                    dataIndex++;
-                } else {
-                    data[dataIndex] = data[dataIndex] + "\n";
-                }
-
-            // When the loop has run NUMBER_OF_LINES_SEND times, reset the counter and delay
-            //   3 seconds, then print empty lines and the new datapoint sequence
-            } else if (IMU.accelerationAvailable() && counter >= NUMBER_OF_LINES_SEND) {
-                id++;
-                for (auto & i : data) {
-                    testSample.writeValue(i);
-                    i = "";
-                    delay(DELAY_BETWEEN_TRANSMISSIONS);
-                    if (!central.connected()) {
+                // Skip the next values to record at the proper sample rate
+                sample_skip_counter = 0;
+                for (int index = 1; index < sample_every_n; index++) {
+                    while (!IMU.accelerationAvailable()) {}
+                    if (!IMU.readAcceleration(x, y, z)) {
                         break;
                     }
                 }
+
+                if (counter != 0 && counter % 5 == 0) {
+                    if (!central.connected()) {
+                        break;
+                    }
+                    testSample.writeValue(data);
+                    data = String(counter%10);
+                } else {
+                    data = data + "\n";
+                }
+                // Increment the counter
+                counter++;
+
+            // When the loop has run NUMBER_OF_LINES_SEND times, reset the counter and delay
+            //   3 seconds, then print empty lines and the new datapoint sequence
+            } else {
+                delay(DELAY_BETWEEN_TRANSMISSIONS);
+                if (!central.connected()) {
+                    break;
+                }
                 testSample.writeValue("stop");
                 counter = 0;
-                data[0] = "-,-,-\n";
-                dataIndex = 0;
+                data = String(7) + "-,-,-\n";
+
             }
-            // Increment the counter and delay .01 seconds
-            counter++;
-            delay(10);
         }
 
         if (!central.connected()) {
