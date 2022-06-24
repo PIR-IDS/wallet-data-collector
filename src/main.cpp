@@ -2,9 +2,9 @@
 #include <Arduino_LSM9DS1.h>
 #include <ArduinoBLE.h>
 
-#define STRING_BUFFER_SIZE 6000
-#define DELAY_BETWEEN_TRANSMISSIONS 1000
-#define NUMBER_OF_LINES_SEND 256 // ne pas mettre un nombre congru a 1 modulo 13 (300 par exemple)   100 lignes ~1s de capture
+#define STRING_BUFFER_SIZE 2000
+#define DELAY_BETWEEN_TRANSMISSIONS 5000 // en ms
+#define NUMBER_OF_LINES_SEND 256 // 256 pour une sortie de portefeuille, 2000 pour du negatif
 #define SAMPLE_RATE_TARGET 25 // the rate expected to run the model training
 
 //a counter to limit the number of cycles where values are displayed
@@ -85,8 +85,8 @@ void loop()
                 yy = (int) (y * 1000);
                 zz = (int) (z * 1000);
 
-                //data = data + String(xx) + "," + String(yy) + "," + String(zz);
-                data = data + String(counter) + "," + String(sample_every_n) + "," + String(zz);
+                data = data + String(xx) + "," + String(yy) + "," + String(zz);
+                //data = data + String(counter) + "," + String(sample_every_n) + "," + String(zz);
 
                 // Skip the next values to record at the proper sample rate
                 sample_skip_counter = 0;
@@ -117,6 +117,18 @@ void loop()
                     break;
                 }
                 testSample.writeValue("stop");
+                delay(500);
+                if (!central.connected()) {
+                    break;
+                }
+                // print a count to warn the user on when to execute the movements
+                for (int i = 3; i>0;i--) {
+                    if (!central.connected()) {
+                        break;
+                    }
+                    testSample.writeValue(String(i) + "\n");
+                    delay(1000);
+                }
                 counter = 0;
                 data = String(7) + "-,-,-\n";
 
