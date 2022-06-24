@@ -52,13 +52,13 @@ void setup()
     if (!IMU.begin()) {
     }
 
-    data = String(counter%10) + "-,-,-\n";
+    data = String(counter%10) + "-,-,-,-,-,-\n";
 }
 
 void loop()
 {
-    float x, y, z;
-    int xx, yy, zz;
+    float ax, ay, az, gx, gy, gz;
+    int xx, yy, zz, gxx, gyy, gzz;
 
     BLEDevice central = BLE.central();
 
@@ -77,22 +77,29 @@ void loop()
             if (counter < NUMBER_OF_LINES_SEND) {
                 // Read the accelerometer
                 while (!IMU.accelerationAvailable()) {}
-                if (!IMU.readAcceleration(x, y, z)) {
+                if (!IMU.readAcceleration(ax, ay, az)) {
                     break;
                 }
+                if (IMU.gyroscopeAvailable()) {
+                    IMU.readGyroscope(gx, gy, gz);
+                }
                 // Scale up the values to better distinguish movements
-                xx = (int) (x * 1000);
-                yy = (int) (y * 1000);
-                zz = (int) (z * 1000);
+                xx = (int) (ax * 1000);
+                yy = (int) (ay * 1000);
+                zz = (int) (az * 1000);
+                
+                gxx = (int) (gx * 1000);
+                gyy = (int) (gy * 1000);
+                gzz = (int) (gz * 1000);
 
-                data = data + String(xx) + "," + String(yy) + "," + String(zz);
+                data = data + String(xx) + "," + String(yy) + "," + String(zz) + "," + String(gxx) + "," + String(gyy) + "," + String(gzz);
                 //data = data + String(counter) + "," + String(sample_every_n) + "," + String(zz);
 
                 // Skip the next values to record at the proper sample rate
                 sample_skip_counter = 0;
                 for (int index = 1; index < sample_every_n; index++) {
                     while (!IMU.accelerationAvailable()) {}
-                    if (!IMU.readAcceleration(x, y, z)) {
+                    if (!IMU.readAcceleration(ax, ay, az)) {
                         break;
                     }
                 }
@@ -130,7 +137,7 @@ void loop()
                     delay(1000);
                 }
                 counter = 0;
-                data = String(7) + "-,-,-\n";
+                data = String(7) + "-,-,-,-,-,-\n";
 
             }
         }
