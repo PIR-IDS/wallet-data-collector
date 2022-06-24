@@ -85,8 +85,8 @@ void loop()
                 yy = (int) (y * 1000);
                 zz = (int) (z * 1000);
 
-                //data = data + String(xx) + "," + String(yy) + "," + String(zz);
-                data = data + String(counter) + "," + String(sample_every_n) + "," + String(zz);
+                data = data + String(xx) + "," + String(yy) + "," + String(zz);
+                //data = data + String(counter) + "," + String(sample_every_n) + "," + String(zz);
 
                 // Skip the next values to record at the proper sample rate
                 sample_skip_counter = 0;
