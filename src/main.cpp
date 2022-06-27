@@ -3,8 +3,8 @@
 #include <ArduinoBLE.h>
 
 #define STRING_BUFFER_SIZE 2000
-#define DELAY_BETWEEN_TRANSMISSIONS 5000 // en ms
-#define NUMBER_OF_LINES_SEND 256 // 256 pour une sortie de portefeuille, 2000 pour du negatif
+#define DELAY_BETWEEN_TRANSMISSIONS 2000 // en ms
+#define NUMBER_OF_LINES_SEND 32 // 256 pour une sortie de portefeuille, 2000 pour du negatif
 #define SAMPLE_RATE_TARGET 25 // the rate expected to run the model training
 
 //a counter to limit the number of cycles where values are displayed
@@ -88,9 +88,9 @@ void loop()
                 yy = (int) (ay * 1000);
                 zz = (int) (az * 1000);
                 
-                gxx = (int) (gx * 2);
-                gyy = (int) (gy * 2);
-                gzz = (int) (gz * 2);
+                gxx = (int) (gx * 5);
+                gyy = (int) (gy * 5);
+                gzz = (int) (gz * 5);
 
                 data = data + String(xx) + "," + String(yy) + "," + String(zz) + "," + String(gxx) + "," + String(gyy) + "," + String(gzz);
                 //data = data + String(counter) + "," + String(sample_every_n) + "," + String(zz);
