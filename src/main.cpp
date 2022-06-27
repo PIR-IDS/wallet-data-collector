@@ -4,7 +4,7 @@
 
 #define STRING_BUFFER_SIZE 2000
 #define DELAY_BETWEEN_TRANSMISSIONS 2000 // en ms
-#define NUMBER_OF_LINES_SEND 32 // 256 pour une sortie de portefeuille, 2000 pour du negatif
+#define NUMBER_OF_LINES_SEND 96 // 256 pour une sortie de portefeuille, 2000 pour du negatif
 #define SAMPLE_RATE_TARGET 25 // the rate expected to run the model training
 
 //a counter to limit the number of cycles where values are displayed
@@ -93,7 +93,7 @@ void loop()
                 gzz = (int) (gz * 5);
 
                 data = data + String(xx) + "," + String(yy) + "," + String(zz) + "," + String(gxx) + "," + String(gyy) + "," + String(gzz);
-                //data = data + String(counter) + "," + String(sample_every_n) + "," + String(zz);
+                //data = data + String(counter) + "," + String(sample_rate_IMU) + "," + String(zz);
 
                 // Skip the next values to record at the proper sample rate
                 sample_skip_counter = 0;
