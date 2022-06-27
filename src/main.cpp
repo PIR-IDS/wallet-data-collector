@@ -88,9 +88,9 @@ void loop()
                 yy = (int) (ay * 1000);
                 zz = (int) (az * 1000);
                 
-                gxx = (int) (gx * 1000);
-                gyy = (int) (gy * 1000);
-                gzz = (int) (gz * 1000);
+                gxx = (int) (gx * 2);
+                gyy = (int) (gy * 2);
+                gzz = (int) (gz * 2);
 
                 data = data + String(xx) + "," + String(yy) + "," + String(zz) + "," + String(gxx) + "," + String(gyy) + "," + String(gzz);
                 //data = data + String(counter) + "," + String(sample_every_n) + "," + String(zz);
