@@ -4,7 +4,7 @@
 
 #define STRING_BUFFER_SIZE 2000
 #define DELAY_BETWEEN_TRANSMISSIONS 2000 // en ms
-#define NUMBER_OF_LINES_SEND 96 // 256 pour une sortie de portefeuille, 2000 pour du negatif
+#define NUMBER_OF_LINES_SEND 96 // 96 pour une sortie de portefeuille, 2000 pour du negatif
 #define SAMPLE_RATE_TARGET 25 // the rate expected to run the model training
 
 //a counter to limit the number of cycles where values are displayed
@@ -32,7 +32,7 @@ void setup()
     }
 
     BLE.setDeviceName("PIR-IDS Card");
-    BLE.setLocalName("PIR-IDS");
+    BLE.setLocalName("PIR-IDS Data Collector");
 
     // Generic Access Control (the closest one to an IDS)
     // see: https://specificationrefs.bluetooth.com/assigned-values/Appearance%20Values.pdf
@@ -75,13 +75,10 @@ void loop()
             // Check if the accelerometer is ready and if the loop has only
             //   been run less than NUMBER_OF_LINES_SEND times (=~3 seconds displayed)
             if (counter < NUMBER_OF_LINES_SEND) {
-                // Read the accelerometer
-                while (!IMU.accelerationAvailable()) {}
-                if (!IMU.readAcceleration(ax, ay, az)) {
+                // Read the accelerometer and gyroscope
+                while (!IMU.accelerationAvailable() or !IMU.gyroscopeAvailable()) {}
+                if (!IMU.readAcceleration(ax, ay, az) or !IMU.readGyroscope(gx, gy, gz)) {
                     break;
-                }
-                if (IMU.gyroscopeAvailable()) {
-                    IMU.readGyroscope(gx, gy, gz);
                 }
                 // Scale up the values to better distinguish movements
                 xx = (int) (ax * 1000);
@@ -98,8 +95,8 @@ void loop()
                 // Skip the next values to record at the proper sample rate
                 sample_skip_counter = 0;
                 for (int index = 1; index < sample_every_n; index++) {
-                    while (!IMU.accelerationAvailable()) {}
-                    if (!IMU.readAcceleration(ax, ay, az)) {
+                    while (!IMU.accelerationAvailable() or !IMU.gyroscopeAvailable()) {}
+                    if (!IMU.readAcceleration(ax, ay, az) or !IMU.readGyroscope(gx, gy, gz)) {
                         break;
                     }
                 }
