@@ -128,20 +128,38 @@ You can also build the firmware in the default `debug` mode without uploading:
 Again, by adding the `-e release` option you will be in `release` mode.
 
 ### Tests
-  
-_TODO_
+
+Before running the tests on your machine, you need to follow these instructions: https://docs.platformio.org/en/latest/platforms/native.html#installation
+
+Then, you can run the "desktop" (i.e. not necessitating the board) tests with the following command:
+  ```sh
+  pio test -e native_debug -e native_release
+  ```
+
+If you want to run the tests for the board, you need to run this command with the board plugged:
+  ```sh
+  pio test -e debug -e release
+  ```
 
 ### Documentation
 
-#### How to collect the data ?
+Before generating the documentation on your machine, you need to follow these instructions: https://doxygen.nl/manual/install.html
+
+Then, to generate the Doxygen documentation, run the following commands:
+  ```sh
+  mkdir -p build/docs
+  doxygen
+  ```
+
+#### How to collect the data?
   
-To collect properly the data of the accelerometer without having to plug the card to a pc, we use the bluetooth connection by running the ble-reader on a pc to retrieve the accelerometer data. After uploading the code on the arduino, unplug it, start the battery and put the arduino in the wallet you want to test. Then, record and retrieve the data by running the ble-reader on a laptop.
+To collect properly the data of the accelerometer without having to plug the card to a PC, we use the bluetooth connection by running the [BLE Reader](https://github.com/PIR-IDS/ble-reader) on a PC to retrieve the accelerometer data. After uploading the code on the arduino, unplug it, start the battery and put the arduino in the wallet you want to test. Then, record and retrieve the data by running the BLE Reader on a laptop.
   
-For the positive samples, edit the main.cpp file to send 500 lines on each samples.
+For the positive samples, edit the main.cpp file to send 500 lines on each sample.
   
-For the negative samples, there are two options. First, we can record the data of the wallet utilisation without pay card utilisation. To do that, the method is similar as the one for the positive samples. We can also record the data of the wallet during non-wallet utilisation (walking, climbings stairs, ...). To do that, edit the main.cpp file to send 2000 lines on each samples.
+For the negative samples, there are two options. First, we can record the data of the wallet utilisation without pay card utilisation. To do that, the method is similar as the one for the positive samples. We can also record the data of the wallet during non-wallet utilisation (walking, climbing stairs, ...). To do that, edit the main.cpp file to send 2000 lines on each sample.
   
-The data of the accelerometer s collected by the arduino between 2 transmissions. The moves done during transmission are not recorded.
+The data of the accelerometer is collected by the arduino between 2 transmissions. The moves done during transmission are not recorded.
 
 ***
 
